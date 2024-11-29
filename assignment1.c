@@ -5,6 +5,7 @@
 
 int main() {
 
+	
     char a[100];
     printf("Enter your expression\n");
     fgets(a, sizeof(a), stdin);
