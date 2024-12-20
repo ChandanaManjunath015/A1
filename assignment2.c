@@ -2,89 +2,84 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-
 typedef struct
 {
-    int id;
-    char name[45];
-    int age;
+    int userId;
+    char userName[45];
+    int userAge;
 } User;
 
-void InputBuffer()
+void clearInputBuffer()
 {
     int c;
-    while ((c=getchar())!='\n'&&c!=EOF);
+    while ((c = getchar()) != '\n' && c != EOF);
 }
 
-int isValidInteger(int num)
+bool isValidPositiveInteger(int num)
 {
     return num > 0;
 }
 
-int isUniqueID(int id)
+bool isUniqueUserId(int userId)
 {
     FILE *file = fopen("users.txt", "r");
     if (file == NULL)
     {
-        return 1;
+        return true;
     }
-
     User user;
-    while (fscanf(file, "%d %s %d", &user.id, user.name, &user.age)!=EOF)
+    bool isUnique = true;
+    while (fscanf(file, "%d %s %d", &user.userId, user.userName, &user.userAge) != EOF)
     {
-        if (user.id==id)
+        if (user.userId == userId)
         {
-            fclose(file);
-            return 0;
+            isUnique = false;
+            break;
         }
     }
-
     fclose(file);
-    return 1;
+    return isUnique;
 }
 
 void createUser()
 {
     FILE *file = fopen("users.txt", "a+");
-
     if (file == NULL)
     {
-        printf("Error opening the file\n");
+        printf("Error: Unable to open the file.\n");
         return;
     }
-
-
-
     User user;
-    printf("Enter ID: ");
-    if (scanf("%d", &user.id) != 1 || !isValidInteger(user.id))
+    bool validInput = true;
+    printf("Enter User ID(positive integer): ");
+    if (scanf("%d", &user.userId) != 1 || !isValidPositiveInteger(user.userId))
     {
-        printf("Please enter a positive integer\n");
-        InputBuffer();
+        printf("Error: Please enter a valid positive integer.\n");
+        validInput = false;
+    }
+    else if (!isUniqueUserId(user.userId))
+    {
+        printf("Error: User ID already exists. It must be unique.\n");
+        validInput = false;
+    }
+    if (!validInput)
+    {
+        clearInputBuffer();
         fclose(file);
         return;
     }
-
-    if (!isUniqueID(user.id))
+    printf("Enter User Name: ");
+    scanf("%s", user.userName);
+    printf("Enter User Age: ");
+    if (scanf("%d", &user.userAge) != 1 || !isValidPositiveInteger(user.userAge))
     {
-        printf("ID already exists. It needs to be unique.\n");
-        InputBuffer();
+        printf("Error: Please enter a valid age.\n");
+        clearInputBuffer();
         fclose(file);
         return;
     }
-
-    printf("Enter name: ");
-    scanf("%s", user.name);
-    printf("Enter age: ");
-    if (scanf("%d", &user.age) != 1 || !isValidInteger(user.age))
-    {
-        printf("Please enter a valid age\n");
-        InputBuffer();
-        fclose(file);
-        return;
-    }
-
-    fprintf(file, "%d %s %d\n", user.id, user.name, user.age);
+    fprintf(file, "%d %s %d\n", user.userId, user.userName, user.userAge);
+    printf("User created successfully.\n");
     fclose(file);
 }
 
@@ -93,18 +88,20 @@ void readUsers()
     FILE *file = fopen("users.txt", "r");
     if (file == NULL)
     {
-        printf("File does not exist\n");
+        printf("No users exist.\n");
         return;
     }
-
     User user;
-    bool empty = true;
-    while (fscanf(file, "%d %s %d", &user.id, user.name, &user.age) != EOF)
+    bool isEmpty = true;
+    while (fscanf(file, "%d %s %d", &user.userId, user.userName, &user.userAge) != EOF)
     {
-        empty = false;
-        printf("ID: %d, Name: %s, Age: %d\n", user.id, user.name, user.age);
+        isEmpty = false;
+        printf("ID: %d, Name: %s, Age: %d\n", user.userId, user.userName, user.userAge);
     }
-    if (empty) printf("No users exist\n");
+    if (isEmpty)
+    {
+        printf("No users exist.\n");
+    }
     fclose(file);
 }
 
@@ -113,58 +110,60 @@ void updateUser()
     FILE *file = fopen("users.txt", "r");
     if (file == NULL)
     {
-        printf("File does not exist\n");
+        printf("No users exist.\n");
         return;
     }
-
-    User user;
-    int id;
-    int found = 0;
-    printf("Enter ID to update: ");
-
-    if (scanf("%d", &id) != 1 || !isValidInteger(id))
+    FILE *tempFile = fopen("temp.txt", "w");
+    if (tempFile == NULL)
     {
-        printf("Please enter positive integer.\n");
-        InputBuffer();
+        printf("Error: Unable to create a temporary file.\n");
         fclose(file);
         return;
     }
-
-    FILE *tempFile = fopen("temp.txt", "w");
-    while (fscanf(file, "%d %s %d", &user.id, user.name, &user.age) != EOF)
+    User user;
+    int userId;
+    bool userFound = false;
+    printf("Enter User ID to update: ");
+    if (scanf("%d", &userId) != 1 || !isValidPositiveInteger(userId))
     {
-        if (user.id == id)
+        printf("Error: Please enter a valid positive integer.\n");
+        clearInputBuffer();
+        fclose(file);
+        fclose(tempFile);
+        remove("temp.txt");
+        return;
+    }
+    while (fscanf(file, "%d %s %d", &user.userId, user.userName, &user.userAge) != EOF)
+    {
+        if (user.userId == userId)
         {
-            found = 1;
-            printf("Enter new Name: ");
-            scanf("%s", user.name);
-            printf("Enter new Age: ");
-            if (scanf("%d", &user.age) != 1 || !isValidInteger(user.age))
+            userFound = true;
+            printf("Enter new User Name: ");
+            scanf("%s", user.userName);
+            printf("Enter new User Age: ");
+            if (scanf("%d", &user.userAge) != 1 || !isValidPositiveInteger(user.userAge))
             {
-                printf("Please enter a valid age\n");
-                InputBuffer();
+                printf("Error: Please enter a valid age.\n");
+                clearInputBuffer();
                 fclose(file);
                 fclose(tempFile);
                 remove("temp.txt");
                 return;
             }
         }
-        fprintf(tempFile, "%d %s %d\n", user.id, user.name, user.age);
+        fprintf(tempFile, "%d %s %d\n", user.userId, user.userName, user.userAge);
     }
-
     fclose(file);
     fclose(tempFile);
-
     remove("users.txt");
     rename("temp.txt", "users.txt");
-
-    if (found)
+    if (userFound)
     {
-        printf("User updated\n");
+        printf("User updated successfully.\n");
     }
     else
     {
-        printf("User not found\n");
+        printf("Error: User not found.\n");
     }
 }
 
@@ -173,69 +172,68 @@ void deleteUser()
     FILE *file = fopen("users.txt", "r");
     if (file == NULL)
     {
-        printf("File does not exist\n");
+        printf("No users exist.\n");
         return;
     }
-
-    User user;
-    //bool empty = true;
-    int id, found = 0;
-    printf("Enter ID: ");
-    if (scanf("%d", &id) != 1 || !isValidInteger(id))
+    FILE *tempFile = fopen("temp.txt", "w");
+    if (tempFile == NULL)
     {
-        printf("Please enter positive integer\n");
-        InputBuffer();
+        printf("Error: Unable to create a temporary file.\n");
         fclose(file);
         return;
     }
-
-    FILE *tempFile = fopen("temp.txt", "w");
-    while (fscanf(file, "%d %s %d", &user.id, user.name, &user.age) != EOF)
+    User user;
+    int userId;
+    bool userFound = false;
+    printf("Enter User ID to delete: ");
+    if (scanf("%d", &userId) != 1 || !isValidPositiveInteger(userId))
     {
-        if (user.id != id)
+        printf("Error: Please enter a valid positive integer.\n");
+        clearInputBuffer();
+        fclose(file);
+        fclose(tempFile);
+        remove("temp.txt");
+        return;
+    }
+    while (fscanf(file, "%d %s %d", &user.userId, user.userName, &user.userAge) != EOF)
+    {
+        if (user.userId != userId)
         {
-
-            fprintf(tempFile, "%d %s %d\n", user.id, user.name, user.age);
+            fprintf(tempFile, "%d %s %d\n", user.userId, user.userName, user.userAge);
         }
         else
         {
-            found = 1;
+            userFound = true;
         }
     }
-
-
     fclose(file);
     fclose(tempFile);
-
     remove("users.txt");
     rename("temp.txt", "users.txt");
-
-    if (found)
+    if (userFound)
     {
-        printf("User deleted successfully\n");
+        printf("User deleted successfully.\n");
     }
     else
     {
-        printf("User not found\n");
+        printf("Error: User not found.\n");
     }
 }
 
 int main()
 {
-    int ch;
-
-    while (1)
+    int choice;
+    while (true)
     {
-        printf("1. Create User\n2. Read Users\n3. Update User\n4. Delete User\n5. Exit\n\n");
+        printf("\n1. Create User\n2. Read Users\n3. Update User\n4. Delete User\n5. Exit\n");
         printf("Enter your choice: ");
-        if (scanf("%d", &ch) != 1)
+        if (scanf("%d", &choice) != 1)
         {
-            printf("Please enter a valid choice.\n");
-            InputBuffer();
+            printf("Error: Please enter a valid choice.\n");
+            clearInputBuffer();
             continue;
         }
-
-        switch (ch)
+        switch (choice)
         {
             case 1:
                 createUser();
@@ -250,11 +248,11 @@ int main()
                 deleteUser();
                 break;
             case 5:
-                exit(0);
+                printf("Exiting program.\n");
+                return 0;
             default:
-                printf("Please enter a valid choice\n");
+                printf("Error: Invalid choice. Please try again.\n");
         }
     }
-
     return 0;
 }
