@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+
 typedef struct
 {
     int userId;
@@ -11,8 +12,8 @@ typedef struct
 
 void clearInputBuffer()
 {
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF);
+    int inputChar;
+    while ((inputChar = getchar()) != '\n' && inputChar != EOF);
 }
 
 bool isValidPositiveInteger(int num)
@@ -23,23 +24,23 @@ bool isValidPositiveInteger(int num)
 bool isUniqueUserId(int userId)
 {
     FILE *file = fopen("users.txt", "r");
-    if (file == NULL)
-    {
-        return true;
-    }
-    User user;
     bool isUnique = true;
-    while (fscanf(file, "%d %s %d", &user.userId, user.userName, &user.userAge) != EOF)
+    if (file != NULL)
     {
-        if (user.userId == userId)
+        User user;
+        while (fscanf(file, "%d %s %d", &user.userId, user.userName, &user.userAge) != EOF)
         {
-            isUnique = false;
-            break;
+            if (user.userId == userId)
+            {
+                isUnique = false;
+                break;
+            }
         }
+        fclose(file);
     }
-    fclose(file);
     return isUnique;
 }
+
 
 void createUser()
 {
