@@ -1,136 +1,120 @@
 #include <stdio.h>
-#define MAX_QUEUE_SIZE 5
+#include <stdlib.h>
+#define MAX 5
 
-int queue[MAX_QUEUE_SIZE];
-int front_of_queue = -1, rear_of_queue = -1;
-
-int isFull()
-{
-    if((rear_of_queue + 1) % MAX_QUEUE_SIZE == front_of_queue)
-    {
-        return 1;
-    }
-    return 0;
-}
+int queue[MAX];
+int front = -1, rear = -1;
 
 int isEmpty()
 {
-    if(front_of_queue == rear_of_queue)
-    {
-        return 1;
-    }
-    return 0;
+    return front == -1;
 }
 
-void peek()
+int isFull()
 {
-    if(isEmpty())
-    {
-        printf("Queue is empty. Cannot peek.\n");
-    }
-    else
-    {
-        printf("Peek: %d\n",queue[front_of_queue]);
-    }
+    return (rear + 1) % MAX == front;
 }
 
-void enqueue(int element_to_enqueue)
+void enqueue(int value)
 {
-    if(isFull())
+    if (isFull())
     {
-        printf("Stack is full. Cannot enqueue %d\n",element_to_enqueue);
+        printf("Queue is full. Cannot enqueue %d\n", value);
         return;
     }
-    if(front_of_queue == -1)
+    if (front == -1)
     {
-        front_of_queue = 0;
+        front = 0;
     }
-    rear_of_queue = (rear_of_queue + 1) % MAX_QUEUE_SIZE;
-    queue[rear_of_queue] = element_to_enqueue;
-    printf("Enqueued: %d\n",element_to_enqueue);
+    rear = (rear + 1) % MAX;
+    queue[rear] = value;
 }
 
 int dequeue()
 {
-    if(isEmpty())
+    if (isEmpty())
     {
         printf("Queue is empty. Cannot dequeue.\n");
         return -1;
     }
-    int dequeued_element = queue[front_of_queue];
-    if(front_of_queue == rear_of_queue)
+    int dequeuedValue = queue[front];
+    if (front == rear)
     {
-        front_of_queue = rear_of_queue = -1;
+        front = rear = -1;
     }
     else
     {
-        front_of_queue = (front_of_queue + 1) % MAX_QUEUE_SIZE;
+        front = (front + 1) % MAX;
     }
-    return dequeued_element;
+    return dequeuedValue;
 }
 
-void push(int element_to_push)
+void push(int value)
 {
-    enqueue(element_to_push);
-    int temporary_rear_of_queue = rear_of_queue;
-    while(front_of_queue != temporary_rear_of_queue)
+    int size = (rear - front + MAX) % MAX + 1;
+    enqueue(value);
+    for (int i = 0; i < size - 1; i++)
     {
-        int dequeued_element = dequeue();
-        enqueue(dequeued_element);
+        int temp = dequeue();
+        enqueue(temp);
     }
+}
+
+int pop()
+{
+    return dequeue();
 }
 
 void display()
 {
-    if(isEmpty())
+    if (isEmpty())
     {
-        printf("Queue is empty.\n");
+        printf("Stack is empty.\n");
         return;
     }
-    printf("Queue: ");
-    int index = front_of_queue;
-    while(index != rear_of_queue)
+    printf("Stack: ");
+    int i = front;
+    while (i != rear)
     {
-        printf("%d ",queue[index]);
-        index = (index + 1) % MAX_QUEUE_SIZE;
+        printf("%d ", queue[i]);
+        i = (i + 1) % MAX;
     }
-    printf("%d\n",queue[rear_of_queue]);
+    printf("%d\n", queue[rear]);
 }
 
 int main()
 {
-    printf("Queue operations\nEnter operations\n");
-    int operation_choice;
-    printf("1. Enqueue\n2. Dequeue\n3. Peek\n4. Display\n");
+    printf("Stack operations using one queue\n");
+    int choice, value;
 
-    while(1)
+    while (1)
     {
-        printf("\nEnter operation (1-4): ");
-        scanf("%d",&operation_choice);
+        printf("\nEnter operation:\n");
+        printf("1. Push\n2. Pop\n3. Display\n4. Exit\n");
+        scanf("%d", &choice);
 
-        if(operation_choice == 1)
+        switch (choice)
         {
-            printf("Enter element to enqueue: ");
-            int element_to_enqueue;
-            scanf("%d",&element_to_enqueue);
-            push(element_to_enqueue);
-        }
-        else if(operation_choice == 2)
-        {
-            dequeue();
-        }
-        else if(operation_choice == 3)
-        {
-            peek();
-        }
-        else if(operation_choice == 4)
-        {
-            display();
-        }
-        else
-        {
-            printf("Invalid operation. Exiting...\n");
+        case 1:
+            printf("Enter value to push: ");
+            scanf("%d", &value);
+            push(value);
             break;
+        case 2:
+            value = pop();
+            if (value != -1)
+            {
+                printf("Popped: %d\n", value);
+            }
+            break;
+        case 3:
+            display();
+            break;
+        case 4:
+            printf("Exiting...\n");
+            exit(0);
+        default:
+            printf("Invalid choice. Try again.\n");
         }
     }
 
